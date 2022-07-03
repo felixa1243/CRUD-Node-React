@@ -2,7 +2,7 @@ import { Sequelize } from 'sequelize'
 import db from '../config/db.js'
 
 const { DataTypes } = Sequelize;
-const Products = db.define('upload_db', {
+const Products = db.define('anggota', {
     name: DataTypes.STRING,
     image: DataTypes.STRING,
     url: DataTypes.STRING,

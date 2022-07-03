@@ -6,6 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(fileUpload());
+app.use(express.static('public/images'))
 app.use('/', upload)
 app.use((req, res) => {
     res.json({
