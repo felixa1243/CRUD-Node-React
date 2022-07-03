@@ -1,13 +1,14 @@
-import Product from '../models/products.js';
+import User from '../models/user.js';
 import path from 'path';
 import fs from 'fs'
 import { fileURLToPath } from 'url';
+import findUser from '../utils/searchUser.js'
 const __filename = fileURLToPath(
     import.meta.url);
 const __dirname = path.dirname(__filename);
 export const getProducts = async(req, res) => {
     try {
-        const response = await Product.findAll();
+        const response = await User.findAll();
         res.json({
             response
         })
@@ -17,11 +18,7 @@ export const getProducts = async(req, res) => {
 }
 export const getProductsbyId = async(req, res) => {
     try {
-        const response = await Product.findOne({
-            where: {
-                id: req.params.id
-            }
-        })
+        const response = await findUser(req.params.id)
         res.json(response)
     } catch (err) {
         console.log(err.message)
@@ -59,7 +56,7 @@ export const saveProducts = async(req, res) => {
             }
         })
         try {
-            await Product.create({
+            await User.create({
                 name: name,
                 image: filename,
                 url
@@ -75,25 +72,20 @@ export const saveProducts = async(req, res) => {
 }
 
 export const editProducts = async(req, res) => {
-    const user = await Product.findOne({
-        where: {
-            id: req.params.id
-        }
+    const user = await findUser(req.params.id)
+    if (!user) res.json({
+        error: "not found"
     })
-    if (!user) return res.status(404).json({
-        error: {
-            message: "not found"
-        }
-    })
-    let filename = '';
-    if (req.files === null) filename = Product.image;
-    else {
 
+    let filename = ''
+    if (req.files === null) {
+        filename = user.image
+    } else {
         const file = req.files.file;
         const filesize = file.data.length;
         const ext = path.extname(file.name);
-        const filename = file.md5 + ext;
 
+        filename = file.md5 + ext;
         const permitted = [
             '.jpg', '.png'
         ];
@@ -106,23 +98,35 @@ export const editProducts = async(req, res) => {
             error: {
                 message: "file size too big allowed size:" + (5e6 / 10) + 'mb'
             }
-        })
+        });
         const filePath = './public/images/' + user.image
         fs.unlinkSync(filePath);
-        file.mv(`./public/images/${filename}`, err => {
+        file.mv(`./public/images/${filename}`, async err => {
             if (err) res.status(500).json({
                 error: {
                     message: err.message
                 }
             })
+            try {
+                await User.create({
+                    name: name,
+                    image: filename,
+                    url
+                })
+                res.status(201).json({
+                    success: true,
+                    message: "success add a data"
+                })
+            } catch (err) {
+                console.log(err)
+            }
         })
-
     }
     const name = req.body.title;
     const url = `${req.protocol}://${req.get('host')}/images/${filename}`
 
     try {
-        await Product.update({
+        await User.update({
             name,
             image: filename,
             url
@@ -140,12 +144,9 @@ export const editProducts = async(req, res) => {
         console.log(error.message)
     }
 }
+
 export const deleteProducts = async(req, res) => {
-    const user = await Product.findOne({
-        where: {
-            id: req.params.id
-        }
-    })
+    const user = await findUser(req.params.id);
     if (!user) return res.status(404).json({
         error: {
             message: "not found"
@@ -154,7 +155,7 @@ export const deleteProducts = async(req, res) => {
     try {
         const filePath = './public/images/' + user.image
         fs.unlinkSync(filePath);
-        await Product.destroy({
+        await User.destroy({
             where: {
                 id: req.params.id
             }
