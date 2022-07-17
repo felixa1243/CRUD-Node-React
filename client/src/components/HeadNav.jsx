@@ -4,10 +4,18 @@ import {
   CssBaseline,
   Typography,
   makeStyles,
+  useTheme,
+  useMediaQuery,
+  List,
+  ListItem,
+  ListItemText,
+  
 } from "@material-ui/core";
 import {
   BrowserRouter as Router, 
   Link } from "react-router-dom";
+import HeadDrawer from './HeadDrawer.jsx';
+import NavLink from './NavLink';
 const useStyles = makeStyles((theme) => ({
   navlinks: {
     marginLeft: theme.spacing(10),
@@ -30,13 +38,21 @@ const useStyles = makeStyles((theme) => ({
 }));
 const HeadNav=(props)=>{
   const classes=useStyles()
+  const theme=useTheme();
+  const isMobile=useMediaQuery(theme.breakpoints.down('md'))
   return(
     <AppBar position="static">
       <CssBaseline/>
      <Toolbar>
        <Typography variant='h4' className={classes.logo}>Logo</Typography>
+       {isMobile?<HeadDrawer/>:<List>
+         <ListItem>
+           <ListItemText className={classes.navlinks}>
+             <Link to="/" className={classes.link}>Home</Link>
+           </ListItemText>
+         </ListItem>
+       </List>}
      </Toolbar>
-
     </AppBar>
     )
 }
